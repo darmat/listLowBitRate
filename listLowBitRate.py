@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 from mutagen.mp3 import MP3
 from mutagen.easyid3 import EasyID3
 
@@ -13,8 +14,8 @@ def get_dir_name():
 
 
 def traverse_directories(root=__file__):
-    #root = os.path.dirname(root)
-    root = 'C:\Users\jnetzky\Music'
+    root = os.path.dirname(os.path.abspath(root))
+    #root = 'C:\Users\jnetzky\Music'
     print ' root path is set to ' + root
     log_file = root + '/mp3_list.txt'
     error_file = root + '/error_log.txt'
@@ -34,7 +35,7 @@ def traverse_directories(root=__file__):
     print 'there are ' + str(total_counters['song_count']) + ' below 200 kb'
 
 
-def get_child_dirs(path, visited=[]):
+def add_child_dirs(path, visited=[]):
     siblings = os.listdir(path)
     sub_dirs = []
 
@@ -43,10 +44,6 @@ def get_child_dirs(path, visited=[]):
         if os.path.isdir(item) and item not in visited:
             sub_dirs.append(item)
     return sub_dirs
-
-
-def add_child_dirs(path, visited):
-    return get_child_dirs(path, visited)
 
 
 def search_dir(path, log_file, error_log):
@@ -71,7 +68,6 @@ def write_mp3_info(file_name, log_file='', error_file=''):
     audio_id3 = EasyID3(file_name)
 
     error_log = os.open(error_file.encode('utf8'), os.O_RDWR|os.O_APPEND|os.O_CREAT)
-    error_count = 0
     counters = {'errors': 0, 'song_count': 0}
     audio_info = ''
     bitrate = -1
@@ -79,20 +75,20 @@ def write_mp3_info(file_name, log_file='', error_file=''):
     try:
         bitrate = audio.info.bitrate / 1000
         audio_info = str.format('Artist: {0:30} | Title: {1:40} | Album: {2:40} | Bitrate: {3}',
-                   unicode(audio_id3['artist'][0])[:30],
-                   unicode(audio_id3['title'][0])[:40],
-                   unicode(audio_id3['album'][0])[:40],
-                   str(bitrate))
+            unicode(audio_id3['artist'][0])[:30],
+            unicode(audio_id3['title'][0])[:40],
+            unicode(audio_id3['album'][0])[:40],
+            str(bitrate))
 
         print 'Writing information to file'
 
     except Exception, ex:
         os.write(error_log, 'error reading file ' + file_name + ' ' + ex.message + '\n')
         print 'error reading file ' + file_name + ' ' + ex.message + '\n'
-        error_count += 1
+        counters['errors'] += 1
 
     try:
-        if bitrate != -1 and bitrate < 200:
+        if bitrate != -1 and bitrate < 256 and audio_info != '':
             counters['song_count'] += 1
             log = os.open(log_file.encode('utf8'), os.O_RDWR|os.O_APPEND|os.O_CREAT)
             os.write(log, audio_info)
@@ -100,8 +96,8 @@ def write_mp3_info(file_name, log_file='', error_file=''):
     except Exception, ex:
         os.write(error_log, 'error writing ' + log_file + ' ' + ex.message + '\n')
         print 'error writing ' + log_file + ' ' + ex.message + '\n'
-        error_count += 1
-    counters['errors'] = error_count
+        counters['errors'] += 1
+
     return counters
 
 
