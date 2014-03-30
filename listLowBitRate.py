@@ -15,8 +15,6 @@ def get_dir_name():
 
 def traverse_directories(root=__file__):
     root = os.path.dirname(os.path.abspath(root))
-    #root = 'C:\Users\jnetzky\Music'
-    print ' root path is set to ' + root
     log_file = root + '/mp3_list.txt'
     error_file = root + '/error_log.txt'
     counters = {'errors': 0, 'song_count': 0}
