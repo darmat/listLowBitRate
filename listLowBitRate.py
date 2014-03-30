@@ -9,10 +9,6 @@ def init_list():
     traverse_directories()
 
 
-def get_dir_name():
-    return os.path.dirname(__file__)
-
-
 def traverse_directories(root=__file__):
     root = os.path.dirname(os.path.abspath(root))
     log_file = root + '/mp3_list.txt'
